@@ -1,0 +1,300 @@
+{
+  "info": {
+    "name": "Ops Assistant Agent Harness",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Flow: Start run -> (if AWAITING_APPROVAL) Approve or Reject -> Get run -> Get trace. Start the API with `uv run uvicorn src.main:app`."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8000"
+    },
+    {
+      "key": "run_id",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('reports ok', () => pm.expect(pm.response.json().status).to.eql('ok'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Start run (read-only question)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/runs",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"objective\": \"Is auth-service healthy?\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const run = pm.response.json();",
+              "pm.collectionVariables.set('run_id', run.run_id);",
+              "pm.test('accepted', () => pm.response.to.have.status(202));",
+              "pm.test('completed with an answer', () => {",
+              "  pm.expect(run.status).to.eql('COMPLETED');",
+              "  pm.expect(run.final_answer).to.be.a('string');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Start run (needs incident approval)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/runs",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"objective\": \"search-service looks down. Check its status and the runbook, and open a high severity incident if it is down.\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const run = pm.response.json();",
+              "pm.collectionVariables.set('run_id', run.run_id);",
+              "pm.test('accepted', () => pm.response.to.have.status(202));",
+              "pm.test('waiting for approval', () => {",
+              "  pm.expect(run.status).to.eql('AWAITING_APPROVAL');",
+              "  pm.expect(run.pending_approval.tool_name).to.eql('create_incident');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get run",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/runs/{{run_id}}",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs",
+            "{{run_id}}"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('status is 200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Approve incident",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/runs/{{run_id}}/approve",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs",
+            "{{run_id}}",
+            "approve"
+          ]
+        },
+        "description": "Creates the incident with exactly the arguments shown in pending_approval."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('run finished after approval', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('COMPLETED');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject incident",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/runs/{{run_id}}/reject",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs",
+            "{{run_id}}",
+            "reject"
+          ]
+        },
+        "description": "Use instead of Approve. No incident is created; the model is told it was rejected."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('run finished after rejection', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('COMPLETED');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get trace",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/runs/{{run_id}}/trace",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs",
+            "{{run_id}}",
+            "trace"
+          ]
+        },
+        "description": ""
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('trace has ordered events', () => {",
+              "  const events = pm.response.json();",
+              "  pm.expect(events.length).to.be.above(0);",
+              "  pm.expect(events[0].type).to.eql('run_started');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Start run (empty objective, expect 422)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/runs",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"objective\": \"\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('rejected as invalid', () => pm.response.to.have.status(422));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

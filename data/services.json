@@ -1,0 +1,8 @@
+[
+  {"name": "payments-api", "status": "degraded", "updated_at": "2026-11-04T09:12:00Z", "summary": "Elevated error rate (4.8%) on card authorization; p95 latency 2.4s."},
+  {"name": "auth-service", "status": "healthy", "updated_at": "2026-11-04T09:15:00Z", "summary": "All checks passing; p95 latency 120ms."},
+  {"name": "checkout-service", "status": "healthy", "updated_at": "2026-11-04T09:14:00Z", "summary": "All checks passing; dependency on payments-api is slow but within limits."},
+  {"name": "search-service", "status": "down", "updated_at": "2026-11-04T08:57:00Z", "summary": "Health check failing; index nodes unreachable since 08:55 UTC."},
+  {"name": "notification-service", "status": "healthy", "updated_at": "2026-11-04T09:10:00Z", "summary": "Queue depth normal; delivery success 99.7%."},
+  {"name": "inventory-service", "status": "degraded", "updated_at": "2026-11-04T09:05:00Z", "summary": "Replica lag of 45s on read replicas; stale stock counts possible."}
+]
