@@ -76,13 +76,13 @@ time limits, trace completeness, the API, and the CLI.
 ```
 src/
   main.py  cli.py  bootstrap.py  seed.py
-  core/        config (settings), logging
+  core/        config (settings), logging, enums (run, approval, event types), exceptions
   ai_models/   chat_model (OpenAI chat, store=False), embeddings
   services/    run_service (start, approve, reject, get run, trace)
   graph/       state, nodes, routing, builder    (the LangGraph agent loop)
-  tools/   schemas, registry, executor, mock tools, failure injection
-  store/   MongoDB client, event log, run and approval repositories
-  api/     FastAPI app, routes, schemas
+  tools/       schemas, registry, executor (timeout, retry, validation), mock tools, failure injection
+  store/       MongoDB client, one repository per collection (runs, approvals, incidents), event log
+  api/         FastAPI app routes, dependencies, schemas
 data/      services.json and 16 runbook documents (the mock dataset)
 tests/     unit, integration, api, live
 postman/   collection
