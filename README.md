@@ -32,7 +32,7 @@ curl localhost:8000/runs/<run_id>/trace
 ```
 
 Endpoints: `POST /runs`, `GET /runs/{id}`, `GET /runs/{id}/trace`, `POST /runs/{id}/approve`,
-`POST /runs/{id}/reject`, `GET /health`. Contract: `specs/001-agent-harness/contracts/openapi.yaml`.
+`POST /runs/{id}/reject`, `GET /health`. Interactive API docs are served at `http://localhost:8000/docs`.
 A Postman collection is in `postman/ops-assistant.postman_collection.json` (set `base_url`; `run_id` is saved automatically).
 
 ### CLI
@@ -50,10 +50,29 @@ uv run pytest            # offline: scripted fake LLM, needs only the MongoDB co
 uv run pytest -m live    # optional: one smoke test against the real OpenAI API
 ```
 
-The tests never call OpenAI: a scripted chat model replays success, failure, malformed and looping
-responses. They cover success, tool retry/timeout/permanent failure, invalid tool output, malformed
-model output, approve/reject/duplicate approval/changed arguments, resume after restart, step and
-time limits, trace completeness, the API, and the CLI.
+Expected result with MongoDB running: `74 passed, 1 deselected`.
+
+- The deselected test is the `live` OpenAI smoke test. It is excluded by default because it needs an
+  API key, network access and costs money; run it with `-m live`.
+- Tests that need MongoDB skip themselves when `localhost:27017` is unreachable, so `53 skipped`
+  means the container is not running (`docker compose up -d`). Each test uses its own throwaway
+  database, which is dropped afterwards.
+- The tests never call OpenAI: a scripted chat model replays success, failure, malformed and looping
+  responses.
+
+| Requirement | Where it is tested |
+|---|---|
+| Objective via API or CLI | `tests/api/` (`test_runs_api`, `test_flow`, `test_cli`) |
+| LLM-tool loop, parallel tool calls | `integration/test_happy_path`, `test_mixed_calls`, `test_no_tools` |
+| Input and output validation | `unit/test_schemas`, `integration/test_malformed_llm`, `test_tool_failures` |
+| Tool errors, timeouts, retries | `unit/test_tool_executor`, `integration/test_tool_failures` |
+| Malformed model output and repair | `integration/test_malformed_llm` |
+| Step and time limits | `integration/test_limits`, `test_pause_excludes_time` |
+| Approval, rejection, duplicates, changed arguments | `integration/test_approval_pause`, `test_approval_integrity` |
+| Resume after restart | `integration/test_resume_after_restart` |
+| Trace, logs, run state | `integration/test_trace`, `test_store`, `unit/test_config_logging` |
+| Tool output treated as data, no OpenAI storage | `integration/test_untrusted_tool_output`, `unit/test_chat_model` |
+| Knowledge base vector search | `integration/test_kb_vector_search`, `unit/test_tools` |
 
 ## Configuration (environment variables)
 
@@ -86,6 +105,4 @@ src/
 data/      services.json and 16 runbook documents (the mock dataset)
 tests/     unit, integration, api, live
 postman/   collection
-docs/      REPORT.md (approach, database design, limitations)
-specs/ is kept next to this repo (Spec Kit artifacts)
 ```

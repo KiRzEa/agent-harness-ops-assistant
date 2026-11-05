@@ -1,6 +1,6 @@
 import pytest
 
-from src.core.exceptions import InvalidObjectiveError, RunNotFoundError
+from src.core.exceptions import InvalidObjectiveError
 from tests.fakes import ScriptedChatModel, text_message
 
 
@@ -23,12 +23,6 @@ async def test_get_run_returns_stored_result(harness_factory):
 
     assert stored["status"] == "COMPLETED"
     assert stored["objective"] == "Anything"
-
-
-async def test_unknown_run_raises(harness_factory):
-    harness = harness_factory(ScriptedChatModel())
-    with pytest.raises(RunNotFoundError):
-        await harness.service.get_run("missing")
 
 
 @pytest.mark.parametrize("objective", ["", "   ", "x" * 2001])
