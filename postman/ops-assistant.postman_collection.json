@@ -193,39 +193,6 @@
       ]
     },
     {
-      "name": "Reject incident",
-      "request": {
-        "method": "POST",
-        "header": [],
-        "url": {
-          "raw": "{{base_url}}/runs/{{run_id}}/reject",
-          "host": [
-            "{{base_url}}"
-          ],
-          "path": [
-            "runs",
-            "{{run_id}}",
-            "reject"
-          ]
-        },
-        "description": "Use instead of Approve. No incident is created; the model is told it was rejected."
-      },
-      "event": [
-        {
-          "listen": "test",
-          "script": {
-            "type": "text/javascript",
-            "exec": [
-              "pm.test('run finished after rejection', () => {",
-              "  pm.response.to.have.status(200);",
-              "  pm.expect(pm.response.json().status).to.eql('COMPLETED');",
-              "});"
-            ]
-          }
-        }
-      ]
-    },
-    {
       "name": "Get trace",
       "request": {
         "method": "GET",
@@ -253,6 +220,82 @@
               "  const events = pm.response.json();",
               "  pm.expect(events.length).to.be.above(0);",
               "  pm.expect(events[0].type).to.eql('run_started');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Start run (needs incident approval, to reject)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{base_url}}/runs",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs"
+          ]
+        },
+        "description": "",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"objective\": \"search-service looks down. Check its status and the runbook, and open a high severity incident if it is down.\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "const run = pm.response.json();",
+              "pm.collectionVariables.set('run_id', run.run_id);",
+              "pm.test('accepted', () => pm.response.to.have.status(202));",
+              "pm.test('waiting for approval', () => {",
+              "  pm.expect(run.status).to.eql('AWAITING_APPROVAL');",
+              "  pm.expect(run.pending_approval.tool_name).to.eql('create_incident');",
+              "});"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Reject incident",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/runs/{{run_id}}/reject",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "runs",
+            "{{run_id}}",
+            "reject"
+          ]
+        },
+        "description": "Use instead of Approve. No incident is created; the model is told it was rejected."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('run finished after rejection', () => {",
+              "  pm.response.to.have.status(200);",
+              "  pm.expect(pm.response.json().status).to.eql('COMPLETED');",
               "});"
             ]
           }
