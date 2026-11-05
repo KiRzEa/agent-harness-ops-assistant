@@ -1,31 +1,26 @@
 import uuid
+from datetime import UTC, datetime
 from typing import Any
 
 from langchain_core.messages import HumanMessage, SystemMessage
 from langgraph.types import Command
 
 from src.core.config import Settings
+from src.core.enums import ApprovalStatus, EventType, RunStatus
+from src.core.exceptions import (
+    ApprovalConflictError,
+    InvalidObjectiveError,
+    RunNotFoundError,
+)
 from src.core.logging import bind_run_id, clear_run_id, get_logger
 from src.graph.nodes import SYSTEM_PROMPT
-from src.graph.state import RunStatus
-from src.store.events import EventLog, EventType
-from src.store.runs import ApprovalRepository, ApprovalStatus, RunRepository, utc_now
+from src.store.approvals import ApprovalRepository
+from src.store.events import EventLog
+from src.store.runs import RunRepository
 
 logger = get_logger("service")
 
 MAX_OBJECTIVE_LENGTH = 2000
-
-
-class InvalidObjectiveError(ValueError):
-    pass
-
-
-class RunNotFoundError(LookupError):
-    pass
-
-
-class ApprovalConflictError(RuntimeError):
-    pass
 
 
 class RunService:
@@ -165,7 +160,7 @@ class RunService:
             "status": status,
             "final_answer": final_answer,
             "error": error,
-            "finished_at": utc_now(),
+            "finished_at": datetime.now(UTC),
         }
         if step_count is not None:
             fields["step_count"] = step_count

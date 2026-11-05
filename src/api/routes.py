@@ -1,56 +1,52 @@
-from fastapi import APIRouter, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, status
 
+from src.api.dependencies import RunServiceDep
 from src.api.schemas import EventResponse, RunResponse, StartRunRequest
-from src.services.run_service import (
+from src.core.exceptions import (
     ApprovalConflictError,
     InvalidObjectiveError,
     RunNotFoundError,
-    RunService,
 )
+from src.services.run_service import RunService
 
 router = APIRouter()
 
 
-def get_service(request: Request) -> RunService:
-    return request.app.state.run_service
-
-
 @router.post("/runs", response_model=RunResponse, status_code=status.HTTP_202_ACCEPTED)
-async def start_run(body: StartRunRequest, request: Request):
+async def start_run(body: StartRunRequest, service: RunServiceDep):
     try:
-        return await get_service(request).start_run(body.objective)
+        return await service.start_run(body.objective)
     except InvalidObjectiveError as error:
         raise HTTPException(422, str(error)) from error
 
 
 @router.get("/runs/{run_id}", response_model=RunResponse)
-async def get_run(run_id: str, request: Request):
+async def get_run(run_id: str, service: RunServiceDep):
     try:
-        return await get_service(request).get_run(run_id)
+        return await service.get_run(run_id)
     except RunNotFoundError as error:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Run not found") from error
 
 
 @router.get("/runs/{run_id}/trace", response_model=list[EventResponse])
-async def get_trace(run_id: str, request: Request):
+async def get_trace(run_id: str, service: RunServiceDep):
     try:
-        return await get_service(request).get_trace(run_id)
+        return await service.get_trace(run_id)
     except RunNotFoundError as error:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Run not found") from error
 
 
 @router.post("/runs/{run_id}/approve", response_model=RunResponse)
-async def approve_run(run_id: str, request: Request):
-    return await decide(request, run_id, approve=True)
+async def approve_run(run_id: str, service: RunServiceDep):
+    return await decide(service, run_id, approve=True)
 
 
 @router.post("/runs/{run_id}/reject", response_model=RunResponse)
-async def reject_run(run_id: str, request: Request):
-    return await decide(request, run_id, approve=False)
+async def reject_run(run_id: str, service: RunServiceDep):
+    return await decide(service, run_id, approve=False)
 
 
-async def decide(request: Request, run_id: str, approve: bool):
-    service = get_service(request)
+async def decide(service: RunService, run_id: str, approve: bool):
     try:
         return await (service.approve(run_id) if approve else service.reject(run_id))
     except RunNotFoundError as error:
@@ -60,6 +56,6 @@ async def decide(request: Request, run_id: str, approve: bool):
 
 
 @router.get("/health")
-async def health(request: Request):
-    await get_service(request).runs.ping()
+async def health(service: RunServiceDep):
+    await service.runs.ping()
     return {"status": "ok"}

@@ -3,8 +3,8 @@ from dataclasses import dataclass
 from langchain_core.language_models.chat_models import BaseChatModel
 
 from src.core.config import Settings
+from src.store.approvals import ApprovalRepository
 from src.store.events import EventLog
-from src.store.runs import ApprovalRepository
 from src.tools.registry import ToolSpec
 
 

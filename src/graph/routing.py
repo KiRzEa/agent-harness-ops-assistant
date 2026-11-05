@@ -1,6 +1,7 @@
 from langgraph.graph import END
 
-from src.graph.state import RunState, RunStatus
+from src.core.enums import RunStatus
+from src.graph.state import RunState
 
 
 def is_running(state: RunState) -> bool:

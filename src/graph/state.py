@@ -1,16 +1,7 @@
-from enum import StrEnum
 from typing import Annotated, Any, TypedDict
 
 from langchain_core.messages import AnyMessage
 from langgraph.graph.message import add_messages
-
-
-class RunStatus(StrEnum):
-    RUNNING = "RUNNING"
-    AWAITING_APPROVAL = "AWAITING_APPROVAL"
-    COMPLETED = "COMPLETED"
-    FAILED = "FAILED"
-    LIMIT_EXCEEDED = "LIMIT_EXCEEDED"
 
 
 class RunState(TypedDict):

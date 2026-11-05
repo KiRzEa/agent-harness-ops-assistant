@@ -1,6 +1,6 @@
 import pytest
 
-from src.services.run_service import ApprovalConflictError, RunNotFoundError
+from src.core.exceptions import ApprovalConflictError, RunNotFoundError
 from tests.fakes import ScriptedChatModel, text_message, tool_call_message
 from tests.integration.approval_helpers import INCIDENT_ARGS
 

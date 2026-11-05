@@ -51,10 +51,11 @@ def harness_factory(settings, database):
     from src.graph.builder import build_graph
     from src.graph.dependencies import GraphDependencies
     from src.services.run_service import RunService
+    from src.store.approvals import ApprovalRepository
     from src.store.events import EventLog
-    from src.store.runs import ApprovalRepository, RunRepository
+    from src.store.incidents import IncidentRepository
+    from src.store.runs import RunRepository
     from src.tools.failure_injection import FailureInjector
-    from src.tools.incidents import IncidentRepository
     from src.tools.knowledge_base import load_knowledge_chunks
     from src.tools.registry import build_tool_registry
     from tests.fakes import InMemoryKnowledgeBase, StubEmbeddings

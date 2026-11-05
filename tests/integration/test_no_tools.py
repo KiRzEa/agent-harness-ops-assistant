@@ -1,6 +1,6 @@
 import pytest
 
-from src.services.run_service import InvalidObjectiveError, RunNotFoundError
+from src.core.exceptions import InvalidObjectiveError, RunNotFoundError
 from tests.fakes import ScriptedChatModel, text_message
 
 

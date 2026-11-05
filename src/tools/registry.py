@@ -5,8 +5,9 @@ from typing import Any
 
 from pydantic import BaseModel
 
+from src.store.incidents import IncidentRepository
 from src.tools.failure_injection import FailureInjector
-from src.tools.incidents import IncidentRepository, build_create_incident
+from src.tools.incidents import build_create_incident
 from src.tools.knowledge_base import KnowledgeBase, build_search_knowledge_base
 from src.tools.schemas import (
     CreateIncidentInput,

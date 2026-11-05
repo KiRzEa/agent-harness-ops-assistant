@@ -1,8 +1,10 @@
 import pytest
 from pymongo.errors import DuplicateKeyError
 
-from src.store.events import EventLog, EventType
-from src.store.runs import ApprovalRepository, ApprovalStatus, RunRepository
+from src.core.enums import ApprovalStatus, EventType
+from src.store.approvals import ApprovalRepository
+from src.store.events import EventLog
+from src.store.runs import RunRepository
 
 
 async def test_event_sequence_is_contiguous_per_run(database):
