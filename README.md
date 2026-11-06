@@ -54,7 +54,7 @@ Expected result with MongoDB running: `74 passed, 1 deselected`.
 
 - The deselected test is the `live` OpenAI smoke test. It is excluded by default because it needs an
   API key, network access and costs money; run it with `-m live`.
-- Tests that need MongoDB skip themselves when `localhost:27017` is unreachable, so `53 skipped`
+- Tests that need MongoDB skip themselves when `localhost:27017` is unreachable, so `52 skipped`
   means the container is not running (`docker compose up -d`). Each test uses its own throwaway
   database, which is dropped afterwards.
 - The tests never call OpenAI: a scripted chat model replays success, failure, malformed and looping
@@ -105,4 +105,5 @@ src/
 data/      services.json and 16 runbook documents (the mock dataset)
 tests/     unit, integration, api, live
 postman/   collection
+docs/      slide deck (Agent-Harness-Slides.pdf and .pptx)
 ```
